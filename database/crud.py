@@ -1,12 +1,11 @@
 import logging
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
-from sqlalchemy.exc import NoResultFound
 from datetime import date
 
 from database.core import AsyncSessionManager
 from database.models import TokenBlacklistOutstanding, User
-from app.exceptions.user_exceptions import UserAlreadyExists
+from app.exceptions.user_exceptions import UserAlreadyExists, UserExistError, UnmatchedPassOrUsername
 
 
 async def create_refresh_token(
@@ -31,15 +30,28 @@ async def create_refresh_token(
         return refresh_token
 
 
-async def read_user_by_user_id(user_id: int) -> User:
+async def read_user_by_user_id(user_id: int) -> User | None:
     async with AsyncSessionManager() as session:
         statement = select(User).filter_by(id=user_id)
         result = await session.execute(statement=statement)
 
         user = result.scalars().first()
 
-        if not user:
-            raise NoResultFound(f"User with id <{user_id}> not found")
+        if user is None:
+            raise UserExistError()
+
+        return user
+
+
+async def read_user_by_username(username: str) -> User | None:
+    async with AsyncSessionManager() as session:
+        statement = select(User).filter_by(username=username)
+        result = await session.execute(statement=statement)
+
+        user = result.scalars().first()
+
+        if user is None:
+            raise UnmatchedPassOrUsername()
 
         return user
 
