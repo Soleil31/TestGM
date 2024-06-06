@@ -2,7 +2,8 @@ from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql.functions import func
 from sqlalchemy import BigInteger, String, DateTime, Date, ForeignKey
-from datetime import datetime
+from datetime import datetime, date
+from pydantic import EmailStr
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -17,10 +18,10 @@ class User(Base):
         primary_key=True
     )
     username: Mapped[str] = mapped_column(
-        String(10),
+        String(30),
         unique=True
     )
-    email: Mapped[str] = mapped_column(
+    email: Mapped[EmailStr] = mapped_column(
         String,
         unique=True
     )
@@ -33,7 +34,7 @@ class User(Base):
         DateTime,
         server_default=func.now()
     )
-    birthday: Mapped[datetime] = mapped_column(
+    birthday: Mapped[date] = mapped_column(
         Date
     )
 
