@@ -7,7 +7,7 @@ from datetime import date
 from database.core import AsyncSessionManager
 from database.models import TokenBlacklistOutstanding, User
 from app.exceptions.user_exceptions import UserAlreadyExists, UserExistError, UnmatchedPassOrUsername
-from app.schemas.user_schemas import UserBaseSchema, UserSchema
+from app.schemas.user_schemas import UserBaseSchema, UserSchema, ListUsersSchema
 
 
 async def create_refresh_token(
@@ -76,6 +76,26 @@ async def read_user_by_username(username: str) -> User:
             raise UnmatchedPassOrUsername()
 
         return user
+
+
+async def read_list_of_users() -> ListUsersSchema:
+    async with AsyncSessionManager() as session:
+        statement = select(User).order_by(User.id)
+        result = await session.execute(statement=statement)
+
+        users = result.scalars().all()
+
+        users = ListUsersSchema(
+            users=[
+                UserBaseSchema(
+                    id=user.id,
+                    username=user.username,
+                    email=user.email
+                ) for user in users
+            ]
+        )
+
+        return users
 
 
 async def create_user(

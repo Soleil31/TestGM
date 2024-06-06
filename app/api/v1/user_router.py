@@ -11,9 +11,9 @@ from app.core.security import get_password_hash, verify_password, get_current_us
 from app.services.user_services import create_tokens
 from app.schemas.token_schemas import AccessTokenSchema
 from app.schemas.response_schemas import SuccessResponseSchema
-from app.schemas.user_schemas import UserSchema
+from app.schemas.user_schemas import UserSchema, ListUsersSchema
 from app.constants.user_constants import USER_REGISTER_BAD_RESPONSES, USER_LOGIN_BAD_RESPONSES
-from database.crud import create_user, read_user_by_username, read_user_by_user_id
+from database import crud
 
 
 router = APIRouter(prefix=USER_API_PREFIX)
@@ -46,7 +46,7 @@ async def register(
         raise InvalidEmailDomain()
 
     hashed_password = await get_password_hash(password)
-    db_user = await create_user(
+    db_user = await crud.create_user(
         username=username,
         email=email,
         hashed_password=hashed_password,
@@ -80,7 +80,7 @@ async def login(
         form_data: OAuth2PasswordRequestForm = Depends()
 ) -> AccessTokenSchema:
 
-    db_user = await read_user_by_username(username=form_data.username)
+    db_user = await crud.read_user_by_username(username=form_data.username)
 
     result_of_verifying_pass = await verify_password(form_data.password, db_user.hashed_password)
 
@@ -133,3 +133,17 @@ async def read_user_me(
 ) -> UserSchema:
 
     return current_user
+
+
+@router.get(
+    "/list-of-users",
+    response_model=ListUsersSchema,
+    tags=["User"]
+)
+async def read_list_of_users(
+        current_user: Annotated[UserSchema, Depends(get_current_user)]
+) -> ListUsersSchema:
+
+    users = await crud.read_list_of_users()
+
+    return users

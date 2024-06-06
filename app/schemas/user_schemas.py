@@ -14,3 +14,7 @@ class UserSchema(BaseModel):
     email: EmailStr
     followers: List[Optional["UserBaseSchema"]]
     following: List[Optional["UserBaseSchema"]]
+
+
+class ListUsersSchema(BaseModel):
+    users: List["UserBaseSchema"]
