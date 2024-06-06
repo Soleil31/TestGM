@@ -1,4 +1,4 @@
-TOKEN_API_PREFIX = "/api/v1/token"
+TOKEN_API_PREFIX = "/token"
 
 ALGORITHM = "HS256"
 

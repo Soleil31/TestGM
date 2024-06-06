@@ -1,4 +1,4 @@
-USER_API_PREFIX = "/api/v1/user"
+USER_API_PREFIX = "/user"
 
 USER_REGISTER_DETAIL = {
     400: "Такого домена электронной почты не существует.",
@@ -45,6 +45,35 @@ USER_REGISTER_BAD_RESPONSES = {
                 "application/json":
                     {
                         "example": {"detail": USER_REGISTER_DETAIL.get(413)}
+                    }
+            }
+    }
+}
+
+
+USER_LOGIN_DETAIL = {
+    400: "Пользователь не найден.",
+    404: "Неверный username/email или пароль."
+}
+
+USER_LOGIN_BAD_RESPONSES = {
+    400: {
+        "description": "Error: Bad Request",
+        "content":
+            {
+                "application/json":
+                    {
+                        "example": {"detail": USER_LOGIN_DETAIL.get(400)}
+                    }
+            }
+    },
+    404: {
+        "description": "Error: Bad Request",
+        "content":
+            {
+                "application/json":
+                    {
+                        "example": {"detail": USER_LOGIN_DETAIL.get(404)}
                     }
             }
     }

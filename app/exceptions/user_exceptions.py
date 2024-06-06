@@ -1,6 +1,6 @@
 from fastapi import HTTPException, status
 
-from app.constants.user_constants import USER_REGISTER_DETAIL
+from app.constants.user_constants import USER_REGISTER_DETAIL, USER_LOGIN_DETAIL
 
 
 class PasswordsDoNotMatch(HTTPException):
@@ -32,4 +32,20 @@ class InvalidEmailDomain(HTTPException):
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=USER_REGISTER_DETAIL.get(400)
+        )
+
+
+class UnmatchedPassOrUsername(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=USER_LOGIN_DETAIL.get(404)
+        )
+
+
+class UserExistError(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=USER_LOGIN_DETAIL.get(400)
         )
