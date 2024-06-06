@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response, Form, Depends
+from fastapi import APIRouter, Response, Form, Depends, Path
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
 from pydantic import EmailStr
@@ -6,13 +6,18 @@ from email_validator import validate_email
 from datetime import date
 
 from app.constants.user_constants import USER_API_PREFIX
-from app.exceptions.user_exceptions import PasswordsDoNotMatch, TooLongUsername, InvalidEmailDomain, UserExistError
+from app.exceptions.user_exceptions import (
+    PasswordsDoNotMatch, TooLongUsername, InvalidEmailDomain,
+    UserExistError, SubscriptionError
+)
 from app.core.security import get_password_hash, verify_password, get_current_user
 from app.services.user_services import create_tokens
 from app.schemas.token_schemas import AccessTokenSchema
 from app.schemas.response_schemas import SuccessResponseSchema
 from app.schemas.user_schemas import UserSchema, ListUsersSchema
-from app.constants.user_constants import USER_REGISTER_BAD_RESPONSES, USER_LOGIN_BAD_RESPONSES
+from app.constants.user_constants import (
+    USER_REGISTER_BAD_RESPONSES, USER_LOGIN_BAD_RESPONSES, SUBSCRIPTION_BAD_RESPONSES
+)
 from database import crud
 
 
@@ -23,7 +28,8 @@ router = APIRouter(prefix=USER_API_PREFIX)
     "/register",
     response_model=AccessTokenSchema,
     responses=USER_REGISTER_BAD_RESPONSES,
-    tags=["User"]
+    tags=["User"],
+    description="Регистрация пользователя."
 )
 async def register(
         response: Response,
@@ -73,7 +79,8 @@ async def register(
     "/login",
     response_model=AccessTokenSchema,
     responses=USER_LOGIN_BAD_RESPONSES,
-    tags=["User"]
+    tags=["User"],
+    description="Логин пользователя."
 )
 async def login(
         response: Response,
@@ -106,7 +113,8 @@ async def login(
 @router.delete(
     "/logout",
     response_model=SuccessResponseSchema,
-    tags=["User"]
+    tags=["User"],
+    description="Выход из аккаунта (удаляем рефреш из куки)."
 )
 async def logout(
         response: Response,
@@ -126,7 +134,8 @@ async def logout(
 @router.get(
     "/me",
     response_model=UserSchema,
-    tags=["User"]
+    tags=["User"],
+    description="Получение информации о текущем пользователе."
 )
 async def read_user_me(
         current_user: Annotated[UserSchema, Depends(get_current_user)]
@@ -138,7 +147,8 @@ async def read_user_me(
 @router.get(
     "/list-of-users",
     response_model=ListUsersSchema,
-    tags=["User"]
+    tags=["User"],
+    description="Получение списка всех пользователей."
 )
 async def read_list_of_users(
         current_user: Annotated[UserSchema, Depends(get_current_user)]
@@ -147,3 +157,45 @@ async def read_list_of_users(
     users = await crud.read_list_of_users()
 
     return users
+
+
+@router.post(
+    "/follow-user/{following_user_id}",
+    response_model=SuccessResponseSchema,
+    responses=SUBSCRIPTION_BAD_RESPONSES,
+    tags=["User"],
+    description="Подписка на пользователя для уведомления о его ДР."
+)
+async def follow_user(
+        following_user_id: Annotated[int, Path(title="ID user'а, на которого будет подписка.")],
+        current_user: Annotated[UserSchema, Depends(get_current_user)]
+) -> SuccessResponseSchema:
+
+    if following_user_id == current_user.id:
+        raise SubscriptionError()
+
+    subscribe = await crud.create_follow_user(
+        current_user_id=current_user.id,
+        following_user_id=following_user_id
+    )
+
+    return SuccessResponseSchema(detail="Теперь вы подписаны на пользователя для уведомления о его дне рождения!")
+
+
+@router.delete(
+    "/unfollow-user/{following_user_id}",
+    response_model=SuccessResponseSchema,
+    tags=["User"],
+    description="Отписка от пользователя."
+)
+async def unfollow_user(
+        following_user_id: Annotated[int, Path(title="ID user'а, на которого будет подписка.")],
+        current_user: Annotated[UserSchema, Depends(get_current_user)]
+) -> SuccessResponseSchema:
+
+    await crud.delete_follow_user(
+        current_user_id=current_user.id,
+        following_user_id=following_user_id
+    )
+
+    return SuccessResponseSchema(detail="Теперь вы НЕ подписаны на пользователя для уведомления о его дне рождения!")

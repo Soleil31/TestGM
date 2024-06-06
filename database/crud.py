@@ -5,8 +5,11 @@ from sqlalchemy.orm import joinedload
 from datetime import date
 
 from database.core import AsyncSessionManager
-from database.models import TokenBlacklistOutstanding, User
-from app.exceptions.user_exceptions import UserAlreadyExists, UserExistError, UnmatchedPassOrUsername
+from database.models import TokenBlacklistOutstanding, User, Subscribe
+from app.exceptions.user_exceptions import (
+    UserAlreadyExists, UserExistError, UnmatchedPassOrUsername,
+    SubscriptionAlreadyExists, SubscriptionDoesNotExist
+)
 from app.schemas.user_schemas import UserBaseSchema, UserSchema, ListUsersSchema
 
 
@@ -104,10 +107,13 @@ async def create_user(
         hashed_password: str,
         birthday: date = None
 ) -> User:
+
     async with AsyncSessionManager() as session:
+
         try:
 
             async with session.begin():
+
                 user = User(
                     username=username,
                     email=email,
@@ -115,6 +121,7 @@ async def create_user(
                     birthday=birthday
                 )
                 session.add(user)
+
             await session.commit()
 
         except IntegrityError as e:
@@ -122,3 +129,53 @@ async def create_user(
             raise UserAlreadyExists()
 
         return user
+
+
+async def create_follow_user(
+        current_user_id: int,
+        following_user_id: int
+) -> Subscribe:
+
+    async with AsyncSessionManager() as session:
+
+        try:
+
+            async with session.begin():
+
+                subscribe = Subscribe(
+                    follower_id=current_user_id,
+                    followed_id=following_user_id
+                )
+                session.add(subscribe)
+
+            await session.commit()
+
+        except IntegrityError as e:
+            logging.error(f"Вы уже подписаны на данного пользователя!: {e}")
+            raise SubscriptionAlreadyExists()
+
+        return subscribe
+
+
+async def delete_follow_user(
+        current_user_id: int,
+        following_user_id: int
+) -> None:
+
+    async with AsyncSessionManager() as session:
+
+        async with session.begin():
+
+            statement = select(Subscribe).filter_by(
+                follower_id=current_user_id,
+                followed_id=following_user_id
+            )
+            result = await session.execute(statement)
+            subscribe = result.scalars().first()
+
+            if subscribe is None:
+                raise SubscriptionDoesNotExist()
+
+            await session.delete(subscribe)
+
+        await session.commit()

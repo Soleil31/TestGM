@@ -78,3 +78,43 @@ USER_LOGIN_BAD_RESPONSES = {
             }
     }
 }
+
+
+SUBSCRIPTION_DETAIL = {
+    404: "Подписки на пользователя не существует!",
+    406: "Вы не можете подписаться на самого себя!",
+    409: "Вы уже подписаны на данного пользователя!",
+}
+
+SUBSCRIPTION_BAD_RESPONSES = {
+    400: {
+        "description": "Error: Bad Request",
+        "content":
+            {
+                "application/json":
+                    {
+                        "example": {"detail": SUBSCRIPTION_DETAIL.get(400)}
+                    }
+            }
+    },
+    406: {
+        "description": "Error: Not Acceptable",
+        "content":
+            {
+                "application/json":
+                    {
+                        "example": {"detail": SUBSCRIPTION_DETAIL.get(406)}
+                    }
+            }
+    },
+    409: {
+        "description": "Error: Conflict",
+        "content":
+            {
+                "application/json":
+                    {
+                        "example": {"detail": SUBSCRIPTION_DETAIL.get(409)}
+                    }
+            }
+    },
+}
