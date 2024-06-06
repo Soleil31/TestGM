@@ -15,7 +15,7 @@ from app.constants.token_constants import (
 )
 from app.exceptions.token_exceptions import InvalidAuthenticationCredentials, TokenExpired
 from database import crud
-from database.models import User
+from app.schemas.user_schemas import UserSchema
 
 
 oauth2_scheme = OAuth2PasswordBearer(
@@ -80,7 +80,7 @@ async def get_password_hash(password):
 
 async def get_current_user(
         token: Annotated[str, Depends(oauth2_scheme)]
-) -> User:
+) -> UserSchema:
     try:
         payload = jwt.decode(
             token,
@@ -103,6 +103,6 @@ async def get_current_user(
         logging.error(f"JWTError: {e}")
         raise InvalidAuthenticationCredentials()
 
-    user = await crud.read_user_by_user_id(user_id=int(user_id))
+    user: UserSchema = await crud.read_user_by_user_id(user_id=int(user_id))
 
     return user

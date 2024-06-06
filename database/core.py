@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.ext.asyncio.session import async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio.session import AsyncSession, async_sessionmaker
 
 from settings.loader import PG_CONNECTION_URL
 

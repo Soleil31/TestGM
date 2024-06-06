@@ -13,7 +13,7 @@ from app.schemas.token_schemas import AccessTokenSchema
 from app.schemas.response_schemas import SuccessResponseSchema
 from app.schemas.user_schemas import UserSchema
 from app.constants.user_constants import USER_REGISTER_BAD_RESPONSES, USER_LOGIN_BAD_RESPONSES
-from database.crud import create_user, read_user_by_username
+from database.crud import create_user, read_user_by_username, read_user_by_user_id
 
 
 router = APIRouter(prefix=USER_API_PREFIX)
@@ -132,8 +132,4 @@ async def read_user_me(
         current_user: Annotated[UserSchema, Depends(get_current_user)]
 ) -> UserSchema:
 
-    return UserSchema(
-        id=current_user.id,
-        username=current_user.username,
-        email=current_user.email,
-    )
+    return current_user
