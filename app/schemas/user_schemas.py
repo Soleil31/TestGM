@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
-from datetime import timedelta
+from datetime import time
 
 
 class UserBaseSchema(BaseModel):
@@ -22,8 +22,9 @@ class ListUsersSchema(BaseModel):
 
 
 class NotificationTimeDeltaSchema(BaseModel):
-    notification_timedelta: timedelta = Field(
+    notification_timedelta: time = Field(
         ...,
-        description="Время до ДР, когда нужно отправить уведомление. Например, '1 day' для уведомления за день до ДР.",
-        examples=["1 day", "2 hours", "10 minutes"]
+        description="Время до ДР, когда нужно отправить уведомление. "
+                    "Например, '00:30:00' для уведомления за 30 мин до ДР.",
+        example="00:30:00"
     )

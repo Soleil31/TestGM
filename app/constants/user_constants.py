@@ -87,13 +87,13 @@ SUBSCRIPTION_DETAIL = {
 }
 
 SUBSCRIPTION_BAD_RESPONSES = {
-    400: {
+    404: {
         "description": "Error: Bad Request",
         "content":
             {
                 "application/json":
                     {
-                        "example": {"detail": SUBSCRIPTION_DETAIL.get(400)}
+                        "example": {"detail": SUBSCRIPTION_DETAIL.get(404)}
                     }
             }
     },
@@ -121,18 +121,18 @@ SUBSCRIPTION_BAD_RESPONSES = {
 
 
 NOTIFICATION_DETAIL = {
-    409: "Вы уже установили время для данного пользователя!",
+    400: "Время для уведомления о Дне Рождения не может превышать 3 часа!"
 }
 
 NOTIFICATION_BAD_RESPONSES = {
-    409: {
-        "description": "Error: Conflict",
+    400: {
+        "description": "Error: Bad Request",
         "content":
             {
                 "application/json":
                     {
-                        "example": {"detail": NOTIFICATION_DETAIL.get(409)}
+                        "example": {"detail": NOTIFICATION_DETAIL.get(400)}
                     }
             }
-    },
+    }
 }

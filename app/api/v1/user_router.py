@@ -3,12 +3,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
 from pydantic import EmailStr
 from email_validator import validate_email
-from datetime import date
+from datetime import date, timedelta
 
 from app.constants.user_constants import USER_API_PREFIX
 from app.exceptions.user_exceptions import (
     PasswordsDoNotMatch, TooLongUsername, InvalidEmailDomain,
-    UserExistError, SubscriptionError
+    UserExistError, SubscriptionError, NotificationTimeTooLarge
 )
 from app.core.security import get_password_hash, verify_password, get_current_user
 from app.services.user_services import create_tokens
@@ -172,6 +172,12 @@ async def follow_user(
         current_user: Annotated[UserSchema, Depends(get_current_user)]
 ) -> SuccessResponseSchema:
 
+    notification_time = notification_timedelta.notification_timedelta
+
+    if (notification_time.hour > 3 or
+        (notification_time.hour == 3 and (notification_time.minute > 0 or notification_time.second > 0))):
+        raise NotificationTimeTooLarge()
+
     if following_user_id == current_user.id:
         raise SubscriptionError()
 
@@ -180,9 +186,16 @@ async def follow_user(
         following_user_id=following_user_id
     )
 
+    notification_timedelta = timedelta(
+        hours=notification_time.hour,
+        minutes=notification_time.minute,
+        seconds=notification_time.second
+    )
+
     notification = await crud.create_notification(
         subscription_id=subscribe.id,
-        notification_timedelta=notification_timedelta.notification_timedelta
+        following_user_id=following_user_id,
+        notification_timedelta=notification_timedelta
     )
 
     return SuccessResponseSchema(detail="Теперь вы подписаны на пользователя для уведомления о его дне рождения!")

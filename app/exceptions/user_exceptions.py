@@ -78,9 +78,9 @@ class SubscriptionDoesNotExist(HTTPException):
         )
 
 
-class NotificationAlreadyExists(HTTPException):
+class NotificationTimeTooLarge(HTTPException):
     def __init__(self):
         super().__init__(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=NOTIFICATION_DETAIL.get(409)
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=NOTIFICATION_DETAIL.get(400)
         )

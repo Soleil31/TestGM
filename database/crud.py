@@ -3,13 +3,13 @@ import time
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select, delete
 from sqlalchemy.orm import joinedload
-from datetime import date, timedelta
+from datetime import date, time, timedelta, datetime
 
 from database.core import AsyncSessionManager
 from database.models import TokenBlacklistOutstanding, User, Subscribe, Notification
 from app.exceptions.user_exceptions import (
     UserAlreadyExists, UserExistError, UnmatchedPassOrUsername,
-    SubscriptionAlreadyExists, SubscriptionDoesNotExist, NotificationAlreadyExists
+    SubscriptionAlreadyExists, SubscriptionDoesNotExist
 )
 from app.schemas.user_schemas import UserBaseSchema, UserSchema, ListUsersSchema
 
@@ -143,6 +143,14 @@ async def create_follow_user(
 
             async with session.begin():
 
+                statement = select(User).filter_by(id=following_user_id)
+                result = await session.execute(statement=statement)
+
+                following_user = result.scalars().first()
+
+                if following_user is None:
+                    raise UserExistError()
+
                 subscribe = Subscribe(
                     follower_id=current_user_id,
                     followed_id=following_user_id
@@ -156,32 +164,6 @@ async def create_follow_user(
             raise SubscriptionAlreadyExists()
 
         return subscribe
-
-
-async def create_notification(
-        subscription_id: int,
-        notification_timedelta: timedelta
-) -> Notification:
-
-    async with AsyncSessionManager() as session:
-
-        try:
-
-            async with session.begin():
-
-                notification = Notification(
-                    subscription_id=subscription_id,
-                    notification_time=notification_timedelta,
-                )
-                session.add(notification)
-
-            await session.commit()
-
-        except IntegrityError as e:
-            logging.error(f"Вы уже установили время для данного пользователя!: {e}")
-            raise NotificationAlreadyExists()
-
-        return notification
 
 
 async def delete_follow_user(
@@ -226,3 +208,35 @@ async def delete_expired_tokens():
 
         except Exception as e:
             logging.info(f"Ошибка очистки токенов: {e}")
+
+
+async def create_notification(
+        subscription_id: int,
+        following_user_id: int,
+        notification_timedelta: timedelta
+) -> Notification:
+
+    async with AsyncSessionManager() as session:
+
+        async with session.begin():
+
+            statement = select(User).filter_by(id=following_user_id)
+            result = await session.execute(statement=statement)
+
+            following_user = result.scalars().first()
+
+            following_user_birthday = datetime(
+                year=following_user.birthday.year,
+                month=following_user.birthday.month,
+                day=following_user.birthday.day
+            )
+
+            notification = Notification(
+                subscription_id=subscription_id,
+                notification_time=following_user_birthday - notification_timedelta,  # noqa
+            )
+            session.add(notification)
+
+        await session.commit()
+
+        return notification
