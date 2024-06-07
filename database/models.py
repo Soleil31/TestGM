@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql.functions import func
-from sqlalchemy import BigInteger, String, DateTime, Date, ForeignKey
-from datetime import datetime, date
+from sqlalchemy import BigInteger, String, DateTime, Date, ForeignKey, Interval
+from datetime import datetime, date, timedelta
 from pydantic import EmailStr
 
 
@@ -46,12 +46,6 @@ class User(Base):
         backref="following"
     )
 
-    notification_settings: Mapped["Notification"] = relationship(
-        "Notification",
-        back_populates="user",
-        uselist=False
-    )
-
 
 class Subscribe(Base):
     __tablename__ = 'subscribe'
@@ -75,6 +69,12 @@ class Subscribe(Base):
         )
     )
 
+    notification_settings: Mapped["Notification"] = relationship(
+        "Notification",
+        back_populates="subscription",
+        uselist=False
+    )
+
 
 class Notification(Base):
     __tablename__ = 'notification'
@@ -83,20 +83,21 @@ class Notification(Base):
         BigInteger,
         primary_key=True
     )
-    user_id: Mapped[int] = mapped_column(
+    subscription_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey(
-            'user.id',
+            'subscribe.id',
             ondelete='CASCADE'
-        )
+        ),
+        unique=True
     )
-    notification_time: Mapped[datetime] = mapped_column(
-        DateTime,
+    notification_time: Mapped[timedelta] = mapped_column(
+        Interval,
         nullable=False
     )
 
-    user = relationship(
-        'User',
+    subscription: Mapped["Subscribe"] = relationship(
+        'Subscribe',
         back_populates='notification_settings'
     )
 
