@@ -14,7 +14,10 @@ from app.core.security import get_password_hash, verify_password, get_current_us
 from app.services.user_services import create_tokens
 from app.schemas.token_schemas import AccessTokenSchema
 from app.schemas.response_schemas import SuccessResponseSchema
-from app.schemas.user_schemas import UserSchema, ListUsersSchema, NotificationTimeDeltaSchema
+from app.schemas.user_schemas import (
+    UserSchema, ListUsersSchema, NotificationTimeDeltaSchema,
+    UserNotificationsSchema
+)
 from app.constants.user_constants import (
     USER_REGISTER_BAD_RESPONSES, USER_LOGIN_BAD_RESPONSES, SUBSCRIPTION_BAD_RESPONSES
 )
@@ -192,7 +195,7 @@ async def follow_user(
         seconds=notification_time.second
     )
 
-    notification = await crud.create_notification(
+    await crud.create_notification(
         subscription_id=subscribe.id,
         following_user_id=following_user_id,
         notification_timedelta=notification_timedelta
@@ -222,3 +225,20 @@ async def unfollow_user(
     return SuccessResponseSchema(
         detail="Теперь вы НЕ подписаны на пользователя для уведомления о его Дне Рождения!"
     )
+
+
+@router.get(
+    "/list-of-notifications",
+    response_model=UserNotificationsSchema,
+    tags=["User"],
+    description="Получение списка всех будущих уведомлений о Днях Рождений."
+)
+async def get_list_of_notifications(
+        current_user: Annotated[UserSchema, Depends(get_current_user)]
+) -> UserNotificationsSchema:
+
+    notifications = await crud.read_list_of_notifications(
+        user_id=current_user.id
+    )
+
+    return notifications

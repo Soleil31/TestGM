@@ -11,7 +11,10 @@ from app.exceptions.user_exceptions import (
     UserAlreadyExists, UserExistError, UnmatchedPassOrUsername,
     SubscriptionAlreadyExists, SubscriptionDoesNotExist
 )
-from app.schemas.user_schemas import UserBaseSchema, UserSchema, ListUsersSchema
+from app.schemas.user_schemas import (
+    UserBaseSchema, UserSchema, ListUsersSchema,
+    UserNotificationsSchema, UserNotificationSchema
+)
 
 
 async def create_refresh_token(
@@ -249,40 +252,73 @@ async def create_notification(
         return notification
 
 
-async def read_notifications(
-        subscription_id: int,
-        following_user_id: int,
-        notification_timedelta: timedelta
+async def read_subscribes_by_follower_id(follower_id: int):
+
+    async with AsyncSessionManager() as session:
+
+        async with session.begin():
+
+            statement = select(Subscribe).filter_by(
+                follower_id=follower_id
+            )
+            result = await session.execute(statement)
+            subscribes = result.scalars().all()
+
+        return subscribes
+
+
+async def read_notification_by_subscription_id(
+        subscription_id: int
 ) -> Notification:
 
     async with AsyncSessionManager() as session:
 
         async with session.begin():
 
-            statement = select(User).filter_by(id=following_user_id)
-            result = await session.execute(statement=statement)
-
-            following_user = result.scalars().first()
-
-            current_date = datetime.now()
-
-            following_user_birthday = datetime(
-                year=current_date.year,
-                month=following_user.birthday.month,
-                day=following_user.birthday.day
+            statement = select(Notification).filter_by(
+                subscription_id=subscription_id
             )
-
-            notification_time = following_user_birthday - notification_timedelta
-
-            if notification_time < current_date:
-                notification_time = notification_time.replace(year=current_date.year + 1)
-
-            notification = Notification(
-                subscription_id=subscription_id,
-                notification_time=notification_time,  # noqa
-            )
-            session.add(notification)
-
-        await session.commit()
+            result = await session.execute(statement)
+            notification = result.scalars().first()
 
         return notification
+
+
+async def read_list_of_notifications(
+        user_id: int
+) -> UserNotificationsSchema:
+
+    async with AsyncSessionManager() as session:
+
+        async with session.begin():
+
+            user_notifications = UserNotificationsSchema(
+                notifications=[]
+            )
+
+            subscribes = await read_subscribes_by_follower_id(follower_id=user_id)
+
+            for subscribe in subscribes:
+
+                notification = await read_notification_by_subscription_id(subscription_id=subscribe.id)
+
+                statement = select(User).filter_by(
+                    id=subscribe.follower_id
+                )
+                result = await session.execute(statement)
+                user = result.scalars().first()
+
+                user = UserBaseSchema(
+                    id=user.id,
+                    username=user.username,
+                    email=user.email
+                )
+
+                user_notification = UserNotificationSchema(
+                    notification_time=notification.notification_time,
+                    user=user
+                )
+
+                user_notifications.notifications.append(user_notification)
+
+        return user_notifications

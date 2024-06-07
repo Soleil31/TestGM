@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import List, Optional
-from datetime import time
+from datetime import time, datetime
 
 
 class UserBaseSchema(BaseModel):
@@ -28,3 +28,12 @@ class NotificationTimeDeltaSchema(BaseModel):
                     "Например, '00:30:00' для уведомления за 30 мин до ДР.",
         example="00:30:00"
     )
+
+
+class UserNotificationsSchema(BaseModel):
+    notifications: List["UserNotificationSchema"]
+
+
+class UserNotificationSchema(BaseModel):
+    notification_time: datetime
+    user: "UserBaseSchema"
