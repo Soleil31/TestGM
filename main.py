@@ -9,7 +9,6 @@ from app.services.email_services import notify_about_birthday
 
 
 app = FastAPI(
-    debug=True,
     title="Документация API для тестового задания.",
     version="0.0.1",
     docs_url="/",
