@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql.functions import func
-from sqlalchemy import BigInteger, String, DateTime, ForeignKey, UniqueConstraint
-from datetime import datetime
+from sqlalchemy import BigInteger, String, DateTime, ForeignKey, UniqueConstraint, Date
+from datetime import datetime, date
 from pydantic import EmailStr
 
 
@@ -34,8 +34,8 @@ class User(Base):
         DateTime,
         server_default=func.now()
     )
-    birthday: Mapped[datetime] = mapped_column(
-        DateTime
+    birthday: Mapped[date] = mapped_column(
+        Date
     )
 
     followers: Mapped[list["User"]] = relationship(
@@ -99,9 +99,6 @@ class Notification(Base):
     notification_time: Mapped[DateTime] = mapped_column(
         DateTime,
         nullable=False
-    )
-    notificated: Mapped[bool] = mapped_column(
-        default=False
     )
 
     subscription: Mapped["Subscribe"] = relationship(
