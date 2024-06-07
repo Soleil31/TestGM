@@ -228,12 +228,54 @@ async def create_notification(
             current_date = datetime.now()
 
             following_user_birthday = datetime(
-                year=current_date.year + 1,
+                year=current_date.year,
                 month=following_user.birthday.month,
                 day=following_user.birthday.day
             )
 
             notification_time = following_user_birthday - notification_timedelta
+
+            if notification_time < current_date:
+                notification_time = notification_time.replace(year=current_date.year + 1)
+
+            notification = Notification(
+                subscription_id=subscription_id,
+                notification_time=notification_time,  # noqa
+            )
+            session.add(notification)
+
+        await session.commit()
+
+        return notification
+
+
+async def read_notifications(
+        subscription_id: int,
+        following_user_id: int,
+        notification_timedelta: timedelta
+) -> Notification:
+
+    async with AsyncSessionManager() as session:
+
+        async with session.begin():
+
+            statement = select(User).filter_by(id=following_user_id)
+            result = await session.execute(statement=statement)
+
+            following_user = result.scalars().first()
+
+            current_date = datetime.now()
+
+            following_user_birthday = datetime(
+                year=current_date.year,
+                month=following_user.birthday.month,
+                day=following_user.birthday.day
+            )
+
+            notification_time = following_user_birthday - notification_timedelta
+
+            if notification_time < current_date:
+                notification_time = notification_time.replace(year=current_date.year + 1)
 
             notification = Notification(
                 subscription_id=subscription_id,
