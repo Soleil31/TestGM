@@ -1,6 +1,7 @@
 import logging
+import time
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.orm import joinedload
 from datetime import date, timedelta
 
@@ -205,3 +206,23 @@ async def delete_follow_user(
             await session.delete(subscribe)
 
         await session.commit()
+
+
+async def delete_expired_tokens():
+
+    async with AsyncSessionManager() as session:
+
+        try:
+            async with session.begin():
+
+                current_time = int(time.time())
+
+                statement = delete(TokenBlacklistOutstanding).where(
+                    TokenBlacklistOutstanding.exp < current_time
+                )
+                await session.execute(statement)
+
+            await session.commit()
+
+        except Exception as e:
+            logging.info(f"Ошибка очистки токенов: {e}")

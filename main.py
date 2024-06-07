@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.api.v1.user_router import router as user_router
+from database import crud
 
 
 app = FastAPI(
@@ -13,16 +15,11 @@ app = FastAPI(
     root_path="/api/v1",
     description="Докуменатция составлена в рамках задания. Для связи: pozitif0898@gmail.com, +79814063284"
 )
-
 app.include_router(router=user_router)
-
-logging.basicConfig(level=logging.INFO)
-
 origins = [
     "http://0.0.0.0:8000",
     "http://127.0.0.1:8000"
 ]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -30,3 +27,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+logging.basicConfig(level=logging.INFO)
+
+scheduler = AsyncIOScheduler()
+scheduler.add_job(crud.delete_expired_tokens, 'interval', seconds=10)
+scheduler.start()
