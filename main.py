@@ -5,6 +5,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.api.v1.user_router import router as user_router
 from database import crud
+from app.services.email_services import notify_about_birthday
 
 
 app = FastAPI(
@@ -31,5 +32,6 @@ app.add_middleware(
 logging.basicConfig(level=logging.INFO)
 
 scheduler = AsyncIOScheduler()
-scheduler.add_job(crud.delete_expired_tokens, 'interval', seconds=10)
+scheduler.add_job(crud.delete_expired_tokens, 'interval', hours=12)
+scheduler.add_job(notify_about_birthday, 'interval', seconds=15)
 scheduler.start()

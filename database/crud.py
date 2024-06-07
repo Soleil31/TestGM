@@ -13,7 +13,7 @@ from app.exceptions.user_exceptions import (
 )
 from app.schemas.user_schemas import (
     UserBaseSchema, UserSchema, ListUsersSchema,
-    UserNotificationsSchema, UserNotificationSchema
+    UserNotificationsSchema, UserNotificationSchema, UserEmailSchema
 )
 
 
@@ -72,6 +72,22 @@ async def read_user_by_user_id(user_id: int) -> UserSchema:
         return user
 
 
+async def read_user_email_by_user_id(user_id: int) -> UserEmailSchema:
+
+    async with AsyncSessionManager() as session:
+
+        statement = select(User).filter_by(id=user_id)
+        result = await session.execute(statement=statement)
+        user = result.scalars().first()
+
+        user = UserEmailSchema(
+            id=user.id,
+            email=user.email
+        )
+
+        return user
+
+
 async def read_user_by_username(username: str) -> User:
     async with AsyncSessionManager() as session:
         statement = select(User).filter_by(username=username)
@@ -109,7 +125,7 @@ async def create_user(
         username: str,
         email: str,
         hashed_password: str,
-        birthday: date = None
+        birthday: date
 ) -> User:
 
     async with AsyncSessionManager() as session:
@@ -267,6 +283,21 @@ async def read_subscribes_by_follower_id(follower_id: int):
         return subscribes
 
 
+async def read_subscribe_by_id(subscribe_id: int):
+
+    async with AsyncSessionManager() as session:
+
+        async with session.begin():
+
+            statement = select(Subscribe).filter_by(
+                id=subscribe_id
+            )
+            result = await session.execute(statement)
+            subscribe = result.scalars().first()
+
+        return subscribe
+
+
 async def read_notification_by_subscription_id(
         subscription_id: int
 ) -> Notification:
@@ -284,7 +315,7 @@ async def read_notification_by_subscription_id(
         return notification
 
 
-async def read_list_of_notifications(
+async def read_user_list_of_notifications(
         user_id: int
 ) -> UserNotificationsSchema:
 
@@ -303,7 +334,7 @@ async def read_list_of_notifications(
                 notification = await read_notification_by_subscription_id(subscription_id=subscribe.id)
 
                 statement = select(User).filter_by(
-                    id=subscribe.follower_id
+                    id=subscribe.followed_id
                 )
                 result = await session.execute(statement)
                 user = result.scalars().first()
@@ -322,3 +353,43 @@ async def read_list_of_notifications(
                 user_notifications.notifications.append(user_notification)
 
         return user_notifications
+
+
+async def read_list_of_notifications_to_send_email():
+
+    async with AsyncSessionManager() as session:
+
+        async with session.begin():
+
+            current_time = datetime.now()
+            statement = select(Notification).where(
+                Notification.notification_time < current_time
+            )
+            result = await session.execute(statement)
+            notifications = result.scalars().all()
+
+        return notifications
+
+
+async def update_notification_time_by_id(notification_id: int):
+
+    async with AsyncSessionManager() as session:
+
+        async with session.begin():
+
+            statement = select(Notification).filter_by(id=notification_id)
+            result = await session.execute(statement)
+            notification = result.scalars().first()
+
+            if notification is not None:
+
+                notification_time = notification.notification_time
+
+                new_notification_time = notification_time.replace(
+                    year=notification_time.year + 1)
+
+                notification.notification_time = new_notification_time
+
+                await session.commit()
+
+        return notification

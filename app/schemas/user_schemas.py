@@ -17,6 +17,11 @@ class UserSchema(BaseModel):
     following: List[Optional["UserBaseSchema"]]
 
 
+class UserEmailSchema(BaseModel):
+    id: int
+    email: EmailStr
+
+
 class ListUsersSchema(BaseModel):
     users: List["UserBaseSchema"]
 

@@ -237,7 +237,7 @@ async def get_list_of_notifications(
         current_user: Annotated[UserSchema, Depends(get_current_user)]
 ) -> UserNotificationsSchema:
 
-    notifications = await crud.read_list_of_notifications(
+    notifications = await crud.read_user_list_of_notifications(
         user_id=current_user.id
     )
 
