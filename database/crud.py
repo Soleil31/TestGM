@@ -2,13 +2,13 @@ import logging
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
-from datetime import date
+from datetime import date, timedelta
 
 from database.core import AsyncSessionManager
-from database.models import TokenBlacklistOutstanding, User, Subscribe
+from database.models import TokenBlacklistOutstanding, User, Subscribe, Notification
 from app.exceptions.user_exceptions import (
     UserAlreadyExists, UserExistError, UnmatchedPassOrUsername,
-    SubscriptionAlreadyExists, SubscriptionDoesNotExist
+    SubscriptionAlreadyExists, SubscriptionDoesNotExist, NotificationAlreadyExists
 )
 from app.schemas.user_schemas import UserBaseSchema, UserSchema, ListUsersSchema
 
@@ -155,6 +155,32 @@ async def create_follow_user(
             raise SubscriptionAlreadyExists()
 
         return subscribe
+
+
+async def create_notification(
+        subscription_id: int,
+        notification_timedelta: timedelta
+) -> Notification:
+
+    async with AsyncSessionManager() as session:
+
+        try:
+
+            async with session.begin():
+
+                notification = Notification(
+                    subscription_id=subscription_id,
+                    notification_time=notification_timedelta,
+                )
+                session.add(notification)
+
+            await session.commit()
+
+        except IntegrityError as e:
+            logging.error(f"Вы уже установили время для данного пользователя!: {e}")
+            raise NotificationAlreadyExists()
+
+        return notification
 
 
 async def delete_follow_user(

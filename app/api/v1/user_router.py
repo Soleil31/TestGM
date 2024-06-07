@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response, Form, Depends, Path
+from fastapi import APIRouter, Response, Form, Depends, Path, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
 from pydantic import EmailStr
@@ -14,7 +14,7 @@ from app.core.security import get_password_hash, verify_password, get_current_us
 from app.services.user_services import create_tokens
 from app.schemas.token_schemas import AccessTokenSchema
 from app.schemas.response_schemas import SuccessResponseSchema
-from app.schemas.user_schemas import UserSchema, ListUsersSchema
+from app.schemas.user_schemas import UserSchema, ListUsersSchema, NotificationTimeDeltaSchema
 from app.constants.user_constants import (
     USER_REGISTER_BAD_RESPONSES, USER_LOGIN_BAD_RESPONSES, SUBSCRIPTION_BAD_RESPONSES
 )
@@ -168,6 +168,7 @@ async def read_list_of_users(
 )
 async def follow_user(
         following_user_id: Annotated[int, Path(title="ID user'а, на которого будет подписка.")],
+        notification_timedelta: Annotated[NotificationTimeDeltaSchema, Body(...)],
         current_user: Annotated[UserSchema, Depends(get_current_user)]
 ) -> SuccessResponseSchema:
 
@@ -177,6 +178,11 @@ async def follow_user(
     subscribe = await crud.create_follow_user(
         current_user_id=current_user.id,
         following_user_id=following_user_id
+    )
+
+    notification = await crud.create_notification(
+        subscription_id=subscribe.id,
+        notification_timedelta=notification_timedelta.notification_timedelta
     )
 
     return SuccessResponseSchema(detail="Теперь вы подписаны на пользователя для уведомления о его дне рождения!")

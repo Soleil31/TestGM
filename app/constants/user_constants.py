@@ -118,3 +118,21 @@ SUBSCRIPTION_BAD_RESPONSES = {
             }
     },
 }
+
+
+NOTIFICATION_DETAIL = {
+    409: "Вы уже установили время для данного пользователя!",
+}
+
+NOTIFICATION_BAD_RESPONSES = {
+    409: {
+        "description": "Error: Conflict",
+        "content":
+            {
+                "application/json":
+                    {
+                        "example": {"detail": NOTIFICATION_DETAIL.get(409)}
+                    }
+            }
+    },
+}

@@ -1,6 +1,9 @@
 from fastapi import HTTPException, status
 
-from app.constants.user_constants import USER_REGISTER_DETAIL, USER_LOGIN_DETAIL, SUBSCRIPTION_DETAIL
+from app.constants.user_constants import (
+    USER_REGISTER_DETAIL, USER_LOGIN_DETAIL,
+    SUBSCRIPTION_DETAIL, NOTIFICATION_DETAIL
+)
 
 
 class PasswordsDoNotMatch(HTTPException):
@@ -72,4 +75,12 @@ class SubscriptionDoesNotExist(HTTPException):
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=SUBSCRIPTION_DETAIL.get(404)
+        )
+
+
+class NotificationAlreadyExists(HTTPException):
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=NOTIFICATION_DETAIL.get(409)
         )
