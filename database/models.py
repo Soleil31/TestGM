@@ -72,7 +72,8 @@ class Subscribe(Base):
     notification_settings: Mapped["Notification"] = relationship(
         "Notification",
         back_populates="subscription",
-        uselist=False
+        uselist=False,
+        cascade="all, delete-orphan"
     )
 
 
@@ -94,6 +95,9 @@ class Notification(Base):
     notification_time: Mapped[timedelta] = mapped_column(
         Interval,
         nullable=False
+    )
+    notificated: Mapped[bool] = mapped_column(
+        default=False
     )
 
     subscription: Mapped["Subscribe"] = relationship(
