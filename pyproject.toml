@@ -8,6 +8,17 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 fastapi = "^0.111.0"
+sqlalchemy = "^2.0.30"
+alembic = "^1.13.1"
+email-validator = "^2.1.1"
+python-dotenv = "^1.0.1"
+asyncpg = "^0.29.0"
+greenlet = "^3.0.3"
+python-multipart = "^0.0.9"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+apscheduler = "^3.10.4"
+fastapi-mail = "^1.4.1"
 
 
 [build-system]
