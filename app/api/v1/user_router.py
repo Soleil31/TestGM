@@ -164,7 +164,7 @@ async def read_list_of_users(
     response_model=SuccessResponseSchema,
     responses=SUBSCRIPTION_BAD_RESPONSES,
     tags=["User"],
-    description="Подписка на пользователя для уведомления о его ДР."
+    description="Подписка на пользователя для уведомления о его Дне Рождения."
 )
 async def follow_user(
         following_user_id: Annotated[int, Path(title="ID user'а, на которого будет подписка.")],
@@ -198,7 +198,7 @@ async def follow_user(
         notification_timedelta=notification_timedelta
     )
 
-    return SuccessResponseSchema(detail="Теперь вы подписаны на пользователя для уведомления о его дне рождения!")
+    return SuccessResponseSchema(detail="Теперь вы подписаны на пользователя для уведомления о его Дне Рождения!")
 
 
 @router.delete(
@@ -217,4 +217,4 @@ async def unfollow_user(
         following_user_id=following_user_id
     )
 
-    return SuccessResponseSchema(detail="Теперь вы НЕ подписаны на пользователя для уведомления о его дне рождения!")
+    return SuccessResponseSchema(detail="Теперь вы НЕ подписаны на пользователя для уведомления о его Дне Рождения!")

@@ -225,15 +225,19 @@ async def create_notification(
 
             following_user = result.scalars().first()
 
+            current_date = datetime.now()
+
             following_user_birthday = datetime(
-                year=following_user.birthday.year,
+                year=current_date.year + 1,
                 month=following_user.birthday.month,
                 day=following_user.birthday.day
             )
 
+            notification_time = following_user_birthday - notification_timedelta
+
             notification = Notification(
                 subscription_id=subscription_id,
-                notification_time=following_user_birthday - notification_timedelta,  # noqa
+                notification_time=notification_time,  # noqa
             )
             session.add(notification)
 
